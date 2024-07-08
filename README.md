@@ -1,73 +1,120 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+### Nest + Remiv + Vite PoC</h1>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Using NestJS services as action and loader functions
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The wireLoader and wireAction functions connect to the RemixModule-decorated module to get providers. By supplying these functions with the type to be used as the backend, nest-remix will route the request appropriately given the @Loader() and @Action() decorators. Services can be injected into the backend class as expected given their module hierarchy.
 
-## Description
+It is required to create a new file as the NestJS decorators will attempt to execute as client-side code otherwise, breaking your build. As such, you will need two files for a route now (sorry!) - {your-route}.tsx and {your-route}.server.ts (you can name it whatever you want, but this is the recommended naming convention).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Note: backends must be provided/exported to be accessible by the RemixModule-decorated module.
 
-## Installation
+```ts
+// src/app/routes/hello-world.tsx
+import type {
+    ActionFunction,
+    LoaderFunction
+}
+    from '@remix-run/node';
+import {
+    Form,
+    useActionData,
+    useLoaderData
+}
+    from '@remix-run/react';
+import {
+    wireAction,
+    wireLoader
+}
+    from 'nest-remix/core.server';
+import {
+    HelloWorldBackend
+}
+    from './hello-world.server';
 
-```bash
-$ npm install
+export const loader: LoaderFunction = (args) = >wireLoader(HelloWorldBackend, args);
+
+export const action: ActionFunction = (args) = >wireAction(HelloWorldBackend, args);
+
+export
+default
+function HelloWorld() {
+    const {
+        message
+    } = useLoaderData < HelloWorldBackend['getMessage'] > ();
+    const actionData = useActionData < HelloWorldBackend['setMessage'] | HelloWorldBackend['setMessageFallback'] > ();
+
+    return ( < div style = {
+    {
+        fontFamily: 'system-ui, sans-serif',
+            lineHeight: '1.4'
+    }
+} > <h1 > Welcome to Remix < /h1>
+    <div style={{ marginTop: 20 }}>{actionData?.newMessage || message}</div > <fieldset style = {
+    {
+        marginTop: 20
+    }
+} > <legend > Update the message < /legend>
+<Form method="post">
+<input type="text" name="message" defaultValue={''} / > <button > Post update < /button>
+</Form > <Form method = "put" > <input type = "text"name = "message"defaultValue = {
+''
+}
+/>
+<button>Put update</button > </Form>
+</fieldset > </div>
+)
 ```
 
-## Running the app
+```ts
+// src/app/routes/hello-world.server.ts
+import {
+    Body,
+    Injectable,
+    ParseIntPipe,
+    Query
+}
+    from '@nestjs/common';
+import {
+    LoaderFunctionArgs
+}
+    from '@remix-run/node';
+import {
+    Action,
+    Loader,
+    RemixArgs
+}
+    from 'nest-remix';
+import {
+    AppService
+}
+    from './app.service.ts';
 
-```bash
-# development
-$ npm run start
+@Injectable() export class HelloWorldBackend {
+    constructor(private readonly appService: AppService);
 
-# watch mode
-$ npm run start:dev
+    @Loader() getMessage(@Query('defaultMessage') defaultMessage: string, @Query('counter', ParseIntPipe) _counter: number, @RemixArgs() _remixArgs: LoaderFunctionArgs) {
+        return {
+            message: defaultMessage || this.appService.getDefaultMessage()
+        };
+    }
 
-# production mode
-$ npm run start:prod
+    @Action() async setMessageFallback(@Body() body: {
+        message: string
+    }) {
+        return {
+            newMessage: body.message + ' [POST, DELETE]'
+        };
+    }
+
+    @Action.Put() async setMessage(@Body() body: {
+        message: string
+    }) {
+        return {
+            newMessage: body.message + ' [PUT]'
+        };
+    }
+}
 ```
 
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+action Routing
+The @Action() decorator will capture all requests to the wired action function. Additional routing is possible by using @Action.Post(), @Action.Put(), and @Action.Delete(). It will always fall back to @Action() if an HTTP verb is not supplied.
