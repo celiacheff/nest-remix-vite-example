@@ -1,0 +1,1 @@
+import{j as e}from"./jsx-runtime-56DGgGmo.js";function i(){return e.jsxs("div",{children:[e.jsx("h2",{children:"Autre page"}),e.jsx("button",{onClick:()=>console.log("clicked"),children:"Click Me"})]})}export{i as default};

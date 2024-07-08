@@ -1,0 +1,51 @@
+{
+  "_components-ULJOhd3c.js": {
+    "file": "assets/components-ULJOhd3c.js",
+    "name": "components",
+    "imports": [
+      "_jsx-runtime-56DGgGmo.js"
+    ]
+  },
+  "_jsx-runtime-56DGgGmo.js": {
+    "file": "assets/jsx-runtime-56DGgGmo.js",
+    "name": "jsx-runtime"
+  },
+  "src/entry.client.tsx": {
+    "file": "assets/entry.client-BDSkmrgt.js",
+    "name": "entry.client",
+    "src": "src/entry.client.tsx",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-56DGgGmo.js",
+      "_components-ULJOhd3c.js"
+    ]
+  },
+  "src/root.tsx?__remix-build-client-route": {
+    "file": "assets/root-D3QkMOl_.js",
+    "name": "root",
+    "src": "src/root.tsx?__remix-build-client-route",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-56DGgGmo.js",
+      "_components-ULJOhd3c.js"
+    ]
+  },
+  "src/routes/_index.tsx?__remix-build-client-route": {
+    "file": "assets/_index-COAK-cU-.js",
+    "name": "_index",
+    "src": "src/routes/_index.tsx?__remix-build-client-route",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-56DGgGmo.js"
+    ]
+  },
+  "src/routes/foo.tsx?__remix-build-client-route": {
+    "file": "assets/foo-BlCXmX0A.js",
+    "name": "foo",
+    "src": "src/routes/foo.tsx?__remix-build-client-route",
+    "isEntry": true,
+    "imports": [
+      "_jsx-runtime-56DGgGmo.js"
+    ]
+  }
+}
